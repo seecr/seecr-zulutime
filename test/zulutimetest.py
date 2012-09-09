@@ -1,7 +1,7 @@
 from unittest import TestCase
 from os import popen
 
-from seecr.zulutime import ZuluTime, TimeError, UTC, Local, ISO8601, RFC2822, ZULU
+from seecr.zulutime import ZuluTime, TimeError, UTC, Local
 
 class ZuluTimeTest(TestCase):
 
@@ -30,15 +30,15 @@ class ZuluTimeTest(TestCase):
             t = ZuluTime("Mon, 20 Nov 1995 21:12:08")
             self.fail()
         except TimeError, e:
-            self.assertEquals("Time zone unknown, use tz=", str(e))
+            self.assertEquals("Time zone unknown, use timezone=", str(e))
 
-        t = ZuluTime("Mon, 20 Nov 1995 21:12:08", tz=UTC)
+        t = ZuluTime("Mon, 20 Nov 1995 21:12:08", timezone=UTC)
         self.assertEquals(21, t.hour)
         self.assertEquals(20, t.day)
 
     def testConversionFromLocalTimeInWinter(self):
         # test only works in Central Europe ;-(
-        t = ZuluTime("Mon, 20 Nov 1995 21:12:08", tz=Local)
+        t = ZuluTime("Mon, 20 Nov 1995 21:12:08", timezone=Local)
         self.assertEquals(20, t.hour)
         self.assertEquals(20, t.day)
         self.assertEquals('CET', Local.tzname(t))
@@ -50,7 +50,7 @@ class ZuluTimeTest(TestCase):
 
     def testConversionFromLocalTimeInSummer(self):
         # test only works in Central Europe ;-(
-        t = ZuluTime("Mon, 21 Jul 1996 21:12:08", tz=Local)
+        t = ZuluTime("Mon, 21 Jul 1996 21:12:08", timezone=Local)
         self.assertEquals(19, t.hour)
         self.assertEquals(21, t.day)
         self.assertEquals('CEST', Local.tzname(t))
@@ -98,29 +98,20 @@ class ZuluTimeTest(TestCase):
 
     def testFormatZulu(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        f = t.format(ZULU)
+        f = t.zulu()
         self.assertEquals("1995-11-20T19:12:08Z", f)
 
     def testFormatRfc2822(self):
         t = ZuluTime("1995-11-20T19:12:08Z")
-        f = t.format(RFC2822)
+        f = t.rfc2822()
         self.assertEquals("Mon, 20 Nov 1995 19:12:08 +0000", f)
 
     def testFormatWithTimeZone(self):
         t = ZuluTime("2007-06-11T15:30:00Z")
-        f = t.format(RFC2822, timezone=Local)
+        f = t.rfc2822(timezone=Local)
         self.assertEquals("Mon, 11 Jun 2007 17:30:00 +0200", f)
-        f = t.format(ISO8601, timezone=Local)
+        f = t.iso8601(timezone=Local)
         self.assertEquals("2007-06-11T17:30:00 CEST", f)
-
-    def testUnsafeFormatsRaiseException(self):
-        t = ZuluTime("2007-06-11T15:30:00Z")
-        try:
-            f = t.format("%H:%M:%S", timezone=Local)
-            self.fail()
-        except TimeError, e:
-            self.assertEquals("Format does not include timezone.", str(e))
-        self.assertRaises(TimeError, lambda:  t.format(ZULU, timezone=Local))
 
     def testDiplayString(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")

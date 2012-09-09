@@ -4,22 +4,18 @@ from email import utils as email
 
 class TimeError(Exception): pass
 
-NO_TIME_DELTA = timedelta(0)
-LOCAL_DELTA = timedelta(seconds=-timezone)
-DST_DELTA = timedelta(seconds=-altzone) if daylight else LOCAL_DELTA
-
-class UtcTimeZone(tzinfo):
+class _UtcTimeZone(tzinfo):
     def tzname(self, _): return "UTC"
-    def utcoffset(self, _): return NO_TIME_DELTA
-    def dst(self, _): return NO_TIME_DELTA
+    def utcoffset(self, _): return _NO_TIME_DELTA
+    def dst(self, _): return _NO_TIME_DELTA
 
-UTC = UtcTimeZone()
+UTC = _UtcTimeZone()
 
-class LocalTimezone(tzinfo):
+class _LocalTimezone(tzinfo):
     def utcoffset(self, t):
-        return DST_DELTA if self._isdst(t) else LOCAL_DELTA
+        return _DST_DELTA if self._isdst(t) else _LOCAL_DELTA
     def dst(self, t):
-        return DST_DELTA - LOCAL_DELTA if self._isdst(t) else NO_TIME_DELTA
+        return _DST_DELTA - _LOCAL_DELTA if self._isdst(t) else _NO_TIME_DELTA
     def tzname(self, t):
         return tzname[self._isdst(t)]
     def _isdst(self, t):
@@ -27,18 +23,19 @@ class LocalTimezone(tzinfo):
         stamp = mktime(tt)
         return localtime(stamp).tm_isdst > 0
 
-Local = LocalTimezone()
+Local = _LocalTimezone()
 
-class TzHelper(tzinfo):
+class _TzHelper(tzinfo):
     def __init__(self, utcoffset_inseconds):
         self._utcoffset_inseconds = utcoffset_inseconds
     def utcoffset(self, dt):
         return timedelta(seconds=self._utcoffset_inseconds)
 
 class ZuluTime(object):
-    """Maintains datetime objects with UTC and proper conversion according to systems locale."""
+    """Converts timestamps making sure time zone information is properly dealt with."""
 
-    def __init__(self, input=None, tz=None):
+    def __init__(self, input=None, timezone=None):
+        """Parses verious formats safely, without loosing time zone information."""
         if input is None:
             self._ = datetime.now(UTC)
         elif input.endswith('Z'):
@@ -49,11 +46,30 @@ class ZuluTime(object):
                 raise TimeError("Format unknown")
             year, month, day, hour, minutes, seconds, _, _, _, utcoffset = email.parsedate_tz(input)
             if utcoffset is None:
-                if tz is None:
-                    raise TimeError("Time zone unknown, use tz=")
+                if timezone is None:
+                    raise TimeError("Time zone unknown, use timezone=")
             else:
-                tz = TzHelper(utcoffset)
-            self._ = datetime(year, month, day, hour, minutes, seconds, 0, tz).astimezone(UTC)
+                timezone = _TzHelper(utcoffset)
+            self._ = datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
+
+    def display(self, f):
+        """Unsafe way to generate display strings that possibly loose information."""
+        return self._.strftime(f)
+
+    def iso8601(self, timezone=UTC):
+        """A safe way to generate ISO date that contains proper timezone information"""
+        return self._format(_ISO8601, timezone)
+
+    def rfc2822(self, timezone=UTC):
+        """A safe way to generate RFC2822 date that contains proper timezone information"""
+        return self._format(_RFC2822, timezone)
+
+    def zulu(self, timezone=UTC):
+        """A safe way to generate Zulu date that contains proper timezone information"""
+        return self._format(_ZULU, timezone)
+
+    def _format(self, f, timezone=UTC):
+        return self._.astimezone(timezone).strftime(f)
 
     @property
     def year(self): return self._.year
@@ -79,18 +95,11 @@ class ZuluTime(object):
     @property
     def weekday(self): return self._.weekday
 
-    def display(self, f):
-        return self._.strftime(f)
+_RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
+_ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
+_ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 
-    def iso8601(self, timzone=UTC):
-        return self._.astimezone(timezone)
+_NO_TIME_DELTA = timedelta(0)
+_LOCAL_DELTA = timedelta(seconds=-timezone)
+_DST_DELTA = timedelta(seconds=-altzone) if daylight else _LOCAL_DELTA
 
-    def format(self, f, timezone=UTC):
-        if timezone is not UTC and "%Z" not in f and "%z" not in f:
-            raise TimeError("Format does not include timezone.")
-
-        return self._.astimezone(timezone).strftime(f)
-
-RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
-ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
-ZULU =  "%Y-%m-%dT%H:%M:%SZ"
