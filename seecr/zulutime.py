@@ -82,6 +82,9 @@ class ZuluTime(object):
     def display(self, f):
         return self._.strftime(f)
 
+    def iso8601(self, timzone=UTC):
+        return self._.astimezone(timezone)
+
     def format(self, f, timezone=UTC):
         if timezone is not UTC and "%Z" not in f and "%z" not in f:
             raise TimeError("Format does not include timezone.")

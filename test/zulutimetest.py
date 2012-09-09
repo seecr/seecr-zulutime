@@ -93,7 +93,7 @@ class ZuluTimeTest(TestCase):
 
     def testFormatIso8601(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        f = t.format(ISO8601)
+        f = t.iso8601()
         self.assertEquals("1995-11-20T19:12:08 UTC", f)
 
     def testFormatZulu(self):
