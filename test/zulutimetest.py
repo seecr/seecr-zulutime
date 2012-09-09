@@ -1,7 +1,7 @@
 from unittest import TestCase
 from os import popen
 
-from seecr.zulutime import ZuluTime, TimeError, UTC, Local
+from seecr.zulutime import ZuluTime, TimeError, UTC, Local, ISO8601, RFC2822, ZULU
 
 class ZuluTimeTest(TestCase):
 
@@ -13,7 +13,7 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(21, t.hour)
         self.assertEquals(12, t.minute)
         self.assertEquals( 8, t.second)
-        self.assertEquals("UTC", t.timezone.tzname())
+        self.assertEquals("UTC", t.timezone.tzname(None))
         self.assertEquals(0, t.timezone.utcoffset(t).days)
         self.assertEquals(0, t.timezone.dst(t).seconds)
 
@@ -21,7 +21,7 @@ class ZuluTimeTest(TestCase):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 -0500")
         self.assertEquals(21, t.day) # Time zone wraps day
         self.assertEquals( 2, t.hour)
-        self.assertEquals("UTC", t.timezone.tzname())
+        self.assertEquals("UTC", t.timezone.tzname(None))
         self.assertEquals(0, t.timezone.utcoffset(t).days)
         self.assertEquals(0, t.timezone.dst(t).seconds)
 
@@ -44,7 +44,7 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('CET', Local.tzname(t))
         self.assertEquals( 3600, Local.utcoffset(t).seconds)
         self.assertEquals(    0, Local.dst(t).seconds)
-        self.assertEquals("UTC", t.timezone.tzname())
+        self.assertEquals("UTC", t.timezone.tzname(None))
         self.assertEquals(    0, t.timezone.utcoffset(t).seconds)
         self.assertEquals(    0, t.timezone.dst(t).seconds)
 
@@ -56,7 +56,7 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('CEST', Local.tzname(t))
         self.assertEquals(  7200, Local.utcoffset(t).seconds)
         self.assertEquals(  3600, Local.dst(t).seconds)
-        self.assertEquals( "UTC", t.timezone.tzname())
+        self.assertEquals( "UTC", t.timezone.tzname(None))
         self.assertEquals(     0, t.timezone.utcoffset(t).seconds)
         self.assertEquals(     0, t.timezone.dst(t).seconds)
 
@@ -80,7 +80,7 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(  23, t.hour)
         self.assertEquals(  27, t.minute)
         self.assertEquals(  11, t.second)
-        self.assertEquals("UTC", t.timezone.tzname())
+        self.assertEquals("UTC", t.timezone.tzname(None))
         self.assertEquals(    0, t.timezone.utcoffset(t).days)
         self.assertEquals(    0, t.timezone.dst(t).seconds)
 
@@ -91,14 +91,38 @@ class ZuluTimeTest(TestCase):
         except TimeError, e:
             self.assertEquals("Format unknown", str(e))
 
+    def testFormatIso8601(self):
+        t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
+        f = t.format(ISO8601)
+        self.assertEquals("1995-11-20T19:12:08 UTC", f)
+
     def testFormatZulu(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        f = t.formatZulu()
+        f = t.format(ZULU)
         self.assertEquals("1995-11-20T19:12:08Z", f)
 
     def testFormatRfc2822(self):
         t = ZuluTime("1995-11-20T19:12:08Z")
-        f = t.formatRfc2822()
+        f = t.format(RFC2822)
         self.assertEquals("Mon, 20 Nov 1995 19:12:08 +0000", f)
 
+    def testFormatWithTimeZone(self):
+        t = ZuluTime("2007-06-11T15:30:00Z")
+        f = t.format(RFC2822, timezone=Local)
+        self.assertEquals("Mon, 11 Jun 2007 17:30:00 +0200", f)
+        f = t.format(ISO8601, timezone=Local)
+        self.assertEquals("2007-06-11T17:30:00 CEST", f)
 
+    def testUnsafeFormatsRaiseException(self):
+        t = ZuluTime("2007-06-11T15:30:00Z")
+        try:
+            f = t.format("%H:%M:%S", timezone=Local)
+            self.fail()
+        except TimeError, e:
+            self.assertEquals("Format does not include timezone.", str(e))
+        self.assertRaises(TimeError, lambda:  t.format(ZULU, timezone=Local))
+
+    def testDiplayString(self):
+        t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
+        s = t.display("%H:%M:%S")
+        self.assertEquals("19:12:08", s)

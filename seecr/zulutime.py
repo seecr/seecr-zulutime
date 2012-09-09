@@ -9,7 +9,7 @@ LOCAL_DELTA = timedelta(seconds=-timezone)
 DST_DELTA = timedelta(seconds=-altzone) if daylight else LOCAL_DELTA
 
 class UtcTimeZone(tzinfo):
-    def tzname(self): return "UTC"
+    def tzname(self, _): return "UTC"
     def utcoffset(self, _): return NO_TIME_DELTA
     def dst(self, _): return NO_TIME_DELTA
 
@@ -79,8 +79,15 @@ class ZuluTime(object):
     @property
     def weekday(self): return self._.weekday
 
-    def formatZulu(self):
-        return self._.isoformat()[0:-6]+'Z'
+    def display(self, f):
+        return self._.strftime(f)
 
-    def formatRfc2822(self):
-        return self._.strftime("%a, %d %b %Y %H:%M:%S %z")
+    def format(self, f, timezone=UTC):
+        if timezone is not UTC and "%Z" not in f and "%z" not in f:
+            raise TimeError("Format does not include timezone.")
+
+        return self._.astimezone(timezone).strftime(f)
+
+RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
+ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
+ZULU =  "%Y-%m-%dT%H:%M:%SZ"
