@@ -1,3 +1,11 @@
+## begin license ##
+# 
+# All rights reserved.
+# 
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# 
+## end license ##
+
 from time import mktime, localtime, tzname, timezone, altzone, daylight
 from datetime import datetime, tzinfo, timedelta
 from email import utils as email

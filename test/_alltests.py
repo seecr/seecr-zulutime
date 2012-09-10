@@ -1,5 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+## begin license ##
+# 
+# All rights reserved.
+# 
+# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# 
+## end license ##
 
 from sys import path
 from os import system, listdir
