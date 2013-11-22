@@ -1,9 +1,9 @@
 ## begin license ##
-# 
+#
 # All rights reserved.
-# 
-# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+#
+# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 ## end license ##
 
 from time import mktime, localtime, tzname, timezone, altzone, daylight
@@ -78,6 +78,9 @@ class ZuluTime(object):
 
     def _format(self, f, timezone=UTC):
         return self._.astimezone(timezone).strftime(f)
+
+    def add(self, **kwargs):
+        self._ += timedelta(**kwargs)
 
     @property
     def year(self): return self._.year

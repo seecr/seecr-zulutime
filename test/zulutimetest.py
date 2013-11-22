@@ -1,9 +1,9 @@
 ## begin license ##
-# 
+#
 # All rights reserved.
-# 
-# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+#
+# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+#
 ## end license ##
 
 from unittest import TestCase
@@ -125,3 +125,9 @@ class ZuluTimeTest(TestCase):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
         s = t.display("%H:%M:%S")
         self.assertEquals("19:12:08", s)
+
+    def testSubtractSeconds(self):
+        t = ZuluTime('2013-11-22T15:00:00Z')
+        t.add(seconds=-60)
+        self.assertEquals('2013-11-22T14:59:00Z', t.zulu())
+
