@@ -2,7 +2,7 @@
 #
 # All rights reserved.
 #
-# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 ## end license ##
 
@@ -131,3 +131,6 @@ class ZuluTimeTest(TestCase):
         t.add(seconds=-60)
         self.assertEquals('2013-11-22T14:59:00Z', t.zulu())
 
+    def testLocal(self):
+        t = ZuluTime('2013-11-22T15:00:00Z')
+        self.assertEquals('2013-11-22 16:00:00', t.local())

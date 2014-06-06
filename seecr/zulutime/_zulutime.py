@@ -2,7 +2,7 @@
 #
 # All rights reserved.
 #
-# Copyright (C) 2012-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 ## end license ##
 
@@ -76,6 +76,9 @@ class ZuluTime(object):
         """A safe way to generate Zulu date that contains proper timezone information"""
         return self._format(_ZULU, timezone)
 
+    def local(self):
+        return self._format(_LOCAL, Local)
+
     def _format(self, f, timezone=UTC):
         return self._.astimezone(timezone).strftime(f)
 
@@ -109,6 +112,7 @@ class ZuluTime(object):
 _RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
 _ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
+_LOCAL =  "%Y-%m-%d %H:%M:%S"
 
 _NO_TIME_DELTA = timedelta(0)
 _LOCAL_DELTA = timedelta(seconds=-timezone)
