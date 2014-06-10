@@ -42,9 +42,11 @@ class _TzHelper(tzinfo):
 class ZuluTime(object):
     """Converts timestamps making sure time zone information is properly dealt with."""
 
-    def __init__(self, input=None, timezone=None):
+    def __init__(self, input=None, timezone=None, _=None):
         """Parses verious formats safely, without loosing time zone information."""
-        if input is None:
+        if _ is not None:
+            self._ = _
+        elif input is None:
             self._ = datetime.now(UTC)
         elif input.endswith('Z'):
             self._ = datetime.strptime(input, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
@@ -83,7 +85,7 @@ class ZuluTime(object):
         return self._.astimezone(timezone).strftime(f)
 
     def add(self, **kwargs):
-        self._ += timedelta(**kwargs)
+        return type(self)(_=self._ + timedelta(**kwargs))
 
     @property
     def year(self): return self._.year

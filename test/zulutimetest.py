@@ -128,8 +128,8 @@ class ZuluTimeTest(TestCase):
 
     def testSubtractSeconds(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
-        t.add(seconds=-60)
-        self.assertEquals('2013-11-22T14:59:00Z', t.zulu())
+        self.assertEquals('2013-11-22T14:59:00Z', t.add(seconds=-60).zulu())
+        self.assertEquals('2013-11-22T15:00:00Z', t.zulu())
 
     def testLocal(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
