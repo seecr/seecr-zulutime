@@ -81,6 +81,21 @@ class ZuluTime(object):
     def local(self):
         return self._format(_LOCAL, Local)
 
+    def formatDutch(self, time):
+        t = self._.astimezone(Local)
+        date = '{day} {month} {year}'.format(
+                day=t.day,
+                month=_MONTHS['nl'][t.month],
+                year=t.year
+            )
+        if not time:
+            return date
+        return '{date}, {hour:02d}:{minute:02d} uur'.format(
+            date=date,
+            hour=t.hour,
+            minute=t.minute,
+            )
+
     def _format(self, f, timezone=UTC):
         return self._.astimezone(timezone).strftime(f)
 
@@ -119,4 +134,22 @@ _LOCAL =  "%Y-%m-%d %H:%M:%S"
 _NO_TIME_DELTA = timedelta(0)
 _LOCAL_DELTA = timedelta(seconds=-timezone)
 _DST_DELTA = timedelta(seconds=-altzone) if daylight else _LOCAL_DELTA
+
+_MONTHS = {
+    'nl': [
+            None,
+            'januari',
+            'februari',
+            'maart',
+            'april',
+            'mei',
+            'juni',
+            'juli',
+            'augustus',
+            'september',
+            'oktober',
+            'november',
+            'december'
+        ]
+}
 

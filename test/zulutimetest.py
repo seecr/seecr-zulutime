@@ -134,3 +134,16 @@ class ZuluTimeTest(TestCase):
     def testLocal(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
         self.assertEquals('2013-11-22 16:00:00', t.local())
+
+    def testFormatInDutchWithoutTime(self):
+        inDutch = lambda s: ZuluTime(s).formatDutch(time=False)
+        self.assertEquals('30 juni 2014', inDutch('2014-06-30T12:00:00Z'))
+        self.assertEquals('29 februari 2012', inDutch('2012-02-29T12:00:00Z'))
+        self.assertEquals('1 maart 2012', inDutch('2012-02-29T23:30:00Z'))
+
+    def testFormatInDutchWithTime(self):
+        inDutch = lambda s: ZuluTime(s).formatDutch(time=True)
+        self.assertEquals('30 juni 2014, 14:00 uur', inDutch('2014-06-30T12:00:00Z'))
+        self.assertEquals('29 februari 2012, 13:00 uur', inDutch('2012-02-29T12:00:00Z'))
+        self.assertEquals('1 maart 2012, 00:30 uur', inDutch('2012-02-29T23:30:00Z'))
+
