@@ -154,6 +154,8 @@ class ZuluTimeTest(TestCase):
     def testLocalToZulu(self):
         t = ZuluTime('2014-09-03 12:30:00', timezone=Local)
         self.assertEquals('2014-09-03T10:30:00Z', t.zulu())
+        t = ZuluTime('2014-12-03 12:30:00', timezone=Local)
+        self.assertEquals('2014-12-03T11:30:00Z', t.zulu())
         t = ZuluTime.parseLocal('2014-09-03 12:30:00')
         self.assertEquals('2014-09-03T10:30:00Z', t.zulu())
 
