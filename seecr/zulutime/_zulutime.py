@@ -1,8 +1,24 @@
 ## begin license ##
 #
-# All rights reserved.
+# Zulutime helps formatting and parsing timestamps.
 #
 # Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+#
+# This file is part of "Zulutime"
+#
+# "Zulutime" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# "Zulutime" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Zulutime"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
 
@@ -48,19 +64,24 @@ class ZuluTime(object):
             self._ = _
         elif input is None:
             self._ = datetime.now(UTC)
-        elif input.endswith('Z'):
-            self._ = datetime.strptime(input, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
         else:
-            result = utcoffset = email.parsedate_tz(input)
-            if result is None:
-                raise TimeError("Format unknown")
-            year, month, day, hour, minutes, seconds, _, _, _, utcoffset = email.parsedate_tz(input)
-            if utcoffset is None:
-                if timezone is None:
-                    raise TimeError("Time zone unknown, use timezone=")
+            lastTimeError = None
+            for m in [self._parseZulutimeFormat, self._parseLocalFormat, self._parseRfc2822]:
+                try:
+                    self._ = m(input, timezone)
+                    break
+                except TimeError, e:
+                    lastTimeError = e
+                except Exception:
+                    pass
             else:
-                timezone = _TzHelper(utcoffset)
-            self._ = datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
+                if lastTimeError is not None:
+                    raise lastTimeError
+                raise TimeError('Format unknown')
+
+    @classmethod
+    def parseLocal(cls, input):
+        return cls(input=input, timezone=Local)
 
     def display(self, f):
         """Unsafe way to generate display strings that possibly loose information."""
@@ -125,6 +146,29 @@ class ZuluTime(object):
 
     @property
     def weekday(self): return self._.weekday
+
+    @staticmethod
+    def _parseZulutimeFormat(input, timezone):
+        timezone = UTC if timezone is None else timezone
+        return datetime.strptime(input, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone)
+
+    @staticmethod
+    def _parseLocalFormat(input, timezone):
+        timezone = UTC if timezone is None else timezone
+        return datetime.strptime(input, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone)
+
+    @staticmethod
+    def _parseRfc2822(input, timezone):
+        result = utcoffset = email.parsedate_tz(input)
+        if result is None:
+            raise TimeError("Format unknown")
+        year, month, day, hour, minutes, seconds, _, _, _, utcoffset = email.parsedate_tz(input)
+        if utcoffset is None:
+            if timezone is None:
+                raise TimeError("Time zone unknown, use timezone=")
+        else:
+            timezone = _TzHelper(utcoffset)
+        return datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
 
 _RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
 _ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"

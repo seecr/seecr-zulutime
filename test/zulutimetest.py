@@ -1,8 +1,24 @@
 ## begin license ##
 #
-# All rights reserved.
+# Zulutime helps formatting and parsing timestamps.
 #
 # Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+#
+# This file is part of "Zulutime"
+#
+# "Zulutime" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# "Zulutime" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with "Zulutime"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
 
@@ -94,7 +110,7 @@ class ZuluTimeTest(TestCase):
 
     def testRaiseExceptionOnUnknownFormat(self):
         try:
-            t = ZuluTime("this is no valid time")
+            ZuluTime("this is no valid time")
             self.fail()
         except TimeError, e:
             self.assertEquals("Format unknown", str(e))
@@ -134,6 +150,16 @@ class ZuluTimeTest(TestCase):
     def testLocal(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
         self.assertEquals('2013-11-22 16:00:00', t.local())
+
+    def testLocalToZulu(self):
+        t = ZuluTime('2014-09-03 12:30:00', timezone=Local)
+        self.assertEquals('2014-09-03T10:30:00Z', t.zulu())
+        t = ZuluTime.parseLocal('2014-09-03 12:30:00')
+        self.assertEquals('2014-09-03T10:30:00Z', t.zulu())
+
+    def testDefaultZuluForOtherFormats(self):
+        t = ZuluTime('2014-09-03 12:30:00')
+        self.assertEquals('2014-09-03T12:30:00Z', t.zulu())
 
     def testFormatInDutchWithoutTime(self):
         inDutch = lambda s: ZuluTime(s).formatDutch(time=False)
