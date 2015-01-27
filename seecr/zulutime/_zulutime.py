@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -95,6 +95,10 @@ class ZuluTime(object):
         """A safe way to generate RFC2822 date that contains proper timezone information"""
         return self._format(_RFC2822, timezone)
 
+    def rfc1123(self):
+        """The expires date in HTTP cookies is specified in this format."""
+        return self._format(_RFC1123, timezone=UTC)
+
     def zulu(self, timezone=UTC):
         """A safe way to generate Zulu date that contains proper timezone information"""
         return self._format(_ZULU, timezone)
@@ -171,6 +175,7 @@ class ZuluTime(object):
         return datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
 
 _RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
+_RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
 _ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 _LOCAL =  "%Y-%m-%d %H:%M:%S"

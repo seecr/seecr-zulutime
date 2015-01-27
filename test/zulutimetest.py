@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2015 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -117,30 +117,28 @@ class ZuluTimeTest(TestCase):
 
     def testFormatIso8601(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        f = t.iso8601()
-        self.assertEquals("1995-11-20T19:12:08 UTC", f)
+        self.assertEquals("1995-11-20T19:12:08 UTC", t.iso8601())
 
     def testFormatZulu(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        f = t.zulu()
-        self.assertEquals("1995-11-20T19:12:08Z", f)
+        self.assertEquals("1995-11-20T19:12:08Z", t.zulu())
 
     def testFormatRfc2822(self):
         t = ZuluTime("1995-11-20T19:12:08Z")
-        f = t.rfc2822()
-        self.assertEquals("Mon, 20 Nov 1995 19:12:08 +0000", f)
+        self.assertEquals("Mon, 20 Nov 1995 19:12:08 +0000", t.rfc2822())
+
+    def testFormatRfc1123(self):
+        t = ZuluTime("1995-11-20T19:12:08Z")
+        self.assertEquals("Mon, 20 Nov 1995 19:12:08 GMT", t.rfc1123())
 
     def testFormatWithTimeZone(self):
         t = ZuluTime("2007-06-11T15:30:00Z")
-        f = t.rfc2822(timezone=Local)
-        self.assertEquals("Mon, 11 Jun 2007 17:30:00 +0200", f)
-        f = t.iso8601(timezone=Local)
-        self.assertEquals("2007-06-11T17:30:00 CEST", f)
+        self.assertEquals("Mon, 11 Jun 2007 17:30:00 +0200", t.rfc2822(timezone=Local))
+        self.assertEquals("2007-06-11T17:30:00 CEST", t.iso8601(timezone=Local))
 
     def testDiplayString(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
-        s = t.display("%H:%M:%S")
-        self.assertEquals("19:12:08", s)
+        self.assertEquals("19:12:08", t.display("%H:%M:%S"))
 
     def testSubtractSeconds(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
