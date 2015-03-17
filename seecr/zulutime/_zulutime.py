@@ -25,6 +25,7 @@
 from time import mktime, localtime, tzname, timezone, altzone, daylight
 from datetime import datetime, tzinfo, timedelta
 from email import utils as email
+from calendar import timegm
 
 class TimeError(Exception): pass
 
@@ -150,6 +151,10 @@ class ZuluTime(object):
 
     @property
     def weekday(self): return self._.weekday
+
+    @property
+    def epoch(self):
+        return timegm(self._.utctimetuple())
 
     @staticmethod
     def _parseZulutimeFormat(input, timezone):
