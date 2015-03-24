@@ -178,3 +178,9 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(1, inSeconds('1970-01-01T00:00:01Z'))
         self.assertEquals(-31535999, inSeconds('1969-01-01T00:00:01Z'))
         self.assertEquals(1426596781, inSeconds('2015-03-17T12:53:01Z'))
+
+    def testFromSecondsEpoch(self):
+        fromSeconds = lambda s: ZuluTime.parseEpoch(s).zulu()
+        self.assertEquals('1970-01-01T00:00:01Z', fromSeconds(1))
+        self.assertEquals('1969-01-01T00:00:01Z', fromSeconds(-31535999))
+        self.assertEquals('2015-03-17T12:53:01Z', fromSeconds(1426596781))

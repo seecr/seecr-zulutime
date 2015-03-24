@@ -84,6 +84,10 @@ class ZuluTime(object):
     def parseLocal(cls, input):
         return cls(input=input, timezone=Local)
 
+    @classmethod
+    def parseEpoch(cls, seconds):
+        return cls(_=datetime.utcfromtimestamp(seconds).replace(tzinfo=UTC))
+
     def display(self, f):
         """Unsafe way to generate display strings that possibly loose information."""
         return self._.strftime(f)
