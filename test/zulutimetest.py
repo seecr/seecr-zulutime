@@ -26,6 +26,16 @@ from unittest import TestCase
 from os import popen
 
 from seecr.zulutime import ZuluTime, TimeError, UTC, Local
+from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE
+
+# TODO:
+#   - Use python-aniso8601 for _parseZulutimeFormat (maybe formats too);
+#     since it supports:
+#       * Fractions of seconds (example: 2012-09-06T23:27:11.123456789Z )
+#                                                           ^^^^^^^^^^
+#       * Can return the granularity/precision of the parsed datetime / date / time format.
+#         Handy for when you want to output a datetime format in the same precision as some input.
+
 
 class ZuluTimeTest(TestCase):
 
@@ -98,6 +108,34 @@ class ZuluTimeTest(TestCase):
 
     def testParseZulu(self):
         t = ZuluTime("2012-09-06T23:27:11Z")
+        self.assertEquals(2012, t.year)
+        self.assertEquals(   9, t.month)
+        self.assertEquals(   6, t.day)
+        self.assertEquals(  23, t.hour)
+        self.assertEquals(  27, t.minute)
+        self.assertEquals(  11, t.second)
+        self.assertEquals("UTC", t.timezone.tzname(None))
+        self.assertEquals(    0, t.timezone.utcoffset(t).days)
+        self.assertEquals(    0, t.timezone.dst(t).seconds)
+
+    def testIso8601ZuluTimeFractions(self):
+        # Hack for not using a better iso8601 / Zulu time parser.
+        self.assertEquals({'Z': 'Z', 'delimSeconds': ':11'}, _ZULU_FRACTION_REMOVAL_RE.search('2012-09-06T23:27:11.0123Z').groupdict())
+        self.assertEquals({'Z': 'Z', 'delimSeconds': ':59'}, _ZULU_FRACTION_REMOVAL_RE.search(':59.00000000000000000001Z').groupdict())
+        self.assertEquals({'Z': 'Z', 'delimSeconds': ':00'}, _ZULU_FRACTION_REMOVAL_RE.search(':00.0Z').groupdict())
+
+        self.assertEquals(None, _ZULU_FRACTION_REMOVAL_RE.search('2012-09-06T23:27:11Z'))
+        self.assertEquals(None, _ZULU_FRACTION_REMOVAL_RE.search(':11Z'))
+        self.assertEquals(None, _ZULU_FRACTION_REMOVAL_RE.search(':11.Z'))
+        self.assertEquals(None, _ZULU_FRACTION_REMOVAL_RE.search(':.0Z'))
+
+        # Wrong, but we don't want to make a parser, strptime will fail for us.
+        self.assertEquals({'Z': 'Z', 'delimSeconds': ':99'}, _ZULU_FRACTION_REMOVAL_RE.search(':99.0Z').groupdict())
+        self.assertEquals({'Z': 'Z', 'delimSeconds': ':0'}, _ZULU_FRACTION_REMOVAL_RE.search(':0.0Z').groupdict())
+
+    def testParseZuluWithFractionalSecondsParsesButFractionIsIgnored(self):
+        # Hack for not using a better iso8601 / Zulu time parser.
+        t = ZuluTime("2012-09-06T23:27:11.123456789Z")
         self.assertEquals(2012, t.year)
         self.assertEquals(   9, t.month)
         self.assertEquals(   6, t.day)

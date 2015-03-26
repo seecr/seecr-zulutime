@@ -22,6 +22,7 @@
 #
 ## end license ##
 
+import re
 from time import mktime, localtime, tzname, timezone, altzone, daylight
 from datetime import datetime, tzinfo, timedelta
 from email import utils as email
@@ -163,6 +164,7 @@ class ZuluTime(object):
     @staticmethod
     def _parseZulutimeFormat(input, timezone):
         timezone = UTC if timezone is None else timezone
+        input = _ZULU_FRACTION_REMOVAL_RE.sub(r'\g<delimSeconds>\g<Z>', input)
         return datetime.strptime(input, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone)
 
     @staticmethod
@@ -210,4 +212,6 @@ _MONTHS = {
             'december'
         ]
 }
+
+_ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>Z)$')
 
