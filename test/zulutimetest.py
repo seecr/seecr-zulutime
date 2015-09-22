@@ -27,6 +27,8 @@ from os import popen
 
 from seecr.zulutime import ZuluTime, TimeError, UTC, Local
 from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE
+from datetime import datetime
+
 
 # TODO:
 #   - Use python-aniso8601 for _parseZulutimeFormat (maybe formats too);
@@ -38,7 +40,6 @@ from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE
 
 
 class ZuluTimeTest(TestCase):
-
     def testParseRfc2822(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 0000")
         self.assertEquals(1995, t.year)
@@ -118,6 +119,14 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(    0, t.timezone.utcoffset(t).days)
         self.assertEquals(    0, t.timezone.dst(t).seconds)
 
+    def testParseIso8601Basic(self):
+        self.assertEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("20120906232711"))
+        self.assertEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("20120906232711000"))
+        self.assertNotEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("20120906"))
+        self.assertEquals(ZuluTime("2012-09-06T00:00:00Z"), ZuluTime("20120906"))
+        self.assertEquals(ZuluTime("2012-09-06T23:00:00Z"), ZuluTime("2012090623"))
+        self.assertRaises(TimeError, lambda: ZuluTime("20120906Z"))
+
     def testIso8601ZuluTimeFractions(self):
         # Hack for not using a better iso8601 / Zulu time parser.
         self.assertEquals({'Z': 'Z', 'delimSeconds': ':11'}, _ZULU_FRACTION_REMOVAL_RE.search('2012-09-06T23:27:11.0123Z').groupdict())
@@ -186,6 +195,10 @@ class ZuluTimeTest(TestCase):
     def testLocal(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
         self.assertEquals('2013-11-22 16:00:00', t.local())
+
+    def testIso8601Basic(self):
+        t = ZuluTime('2013-11-22T15:00:00Z')
+        self.assertEquals('20131122150000', t.iso8601basic())
 
     def testLocalToZulu(self):
         t = ZuluTime('2014-09-03 12:30:00', timezone=Local)
