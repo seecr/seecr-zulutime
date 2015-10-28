@@ -42,16 +42,24 @@ class ZuluTime(object):
             self._ = datetime.now(UTC)
         else:
             lastTimeError = None
-            for m in [self._parseZulutimeFormat, self._parseLocalFormat, self._parseRfc2822, self._parseIso8601BasicLocal]:
+            for m in [
+                    self._parseIso8601,
+                    self._parseZulutimeFormat,
+                    self._parseLocalFormat,
+                    self._parseRfc2822,
+                    self._parseIso8601BasicLocal,
+                    self._parseJavaDefaultDateFormat
+                ]:
                 try:
                     self._ = m(input, timezone=timezone)
+                    lastTimeError = None
                     break
                 except TimeError, e:
                     lastTimeError = e
                 except Exception:
                     pass
             else:
-                if lastTimeError is not None:
+                if not lastTimeError is None:
                     raise lastTimeError
                 raise TimeError('Format unknown')
 
@@ -64,10 +72,19 @@ class ZuluTime(object):
         return cls(_=datetime.utcfromtimestamp(seconds).replace(tzinfo=UTC))
 
     def __eq__(self, other):
+        return self.__class__ is other.__class__ and self._ == other._ and self.timezone == other.timezone
+
+    def equalsPointInTime(self, other):
         return self.__class__ is other.__class__ and self._ == other._
 
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, repr(str(self)))
+
+    def __str__(self):
+        return self.iso8601(self.timezone)
+
     def display(self, f):
-        """Unsafe way to generate display strings that possibly loose information."""
+        """Unsafe way to generate display strings that possibly loses information."""
         return self._.strftime(f)
 
     def iso8601(self, timezone=None):
@@ -96,6 +113,10 @@ class ZuluTime(object):
         timezone = timezone or UTC
         return self._format(''.join(element for (element, l) in _ISO8601_BASIC_LOCAL), timezone=timezone)
 
+    def javaDefaultFormat(self, timezone=None):
+        timezone = timezone or UTC
+        return self._format(_JAVA_DEFAULT_DATE_FORMAT, timezone=timezone)
+
     def formatDutch(self, time):
         t = self._.astimezone(Local)
         date = '{day} {month} {year}'.format(
@@ -109,7 +130,7 @@ class ZuluTime(object):
             date=date,
             hour=t.hour,
             minute=t.minute,
-            )
+        )
 
     def _format(self, f, timezone=None):
         timezone = timezone or UTC
@@ -147,6 +168,17 @@ class ZuluTime(object):
         return timegm(self._.utctimetuple())
 
     @staticmethod
+    def _parseIso8601(input, timezone=None):
+        input = input.strip()
+        for tzName, tz in _TimeZone.registered.iteritems():
+            if tzName in input:
+                if timezone is None:
+                    timezone = tz
+        if timezone is None:
+            timezone = UTC
+        return datetime.strptime(input, _ISO8601).replace(tzinfo=timezone)
+
+    @staticmethod
     def _parseZulutimeFormat(input, timezone):
         timezone = UTC if timezone is None else timezone
         input = _ZULU_FRACTION_REMOVAL_RE.sub(r'\g<delimSeconds>\g<Z>', input)
@@ -159,15 +191,15 @@ class ZuluTime(object):
 
     @staticmethod
     def _parseRfc2822(input, timezone):
-        result = utcoffset = email.parsedate_tz(input)
+        result = email.parsedate_tz(input)
         if result is None:
             raise TimeError("Format unknown")
-        year, month, day, hour, minutes, seconds, _, _, _, utcoffset = email.parsedate_tz(input)
+        year, month, day, hour, minutes, seconds, _, _, _, utcoffset = result
         if utcoffset is None:
             if timezone is None:
                 raise TimeError("Time zone unknown, use timezone=")
         else:
-            timezone = _TzHelper(utcoffset)
+            timezone = _OffsetOnlyTimeZone(utcoffset)
         return datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
 
     @staticmethod
@@ -183,20 +215,56 @@ class ZuluTime(object):
         input = input[:cumulative]
         return datetime.strptime(input, ''.join(pattern)).replace(tzinfo=timezone)
 
+    @staticmethod
+    def _parseJavaDefaultDateFormat(input, timezone=None):
+        input = input.strip()
+        for tzName, tz in _TimeZone.registered.iteritems():
+            if tzName in input:
+                if timezone is None:
+                    timezone = tz
+        if timezone is None:
+            timezone = UTC
+        return datetime.strptime(input, _JAVA_DEFAULT_DATE_FORMAT).replace(tzinfo=timezone)
 
-class _UtcTimeZone(tzinfo):
-    def tzname(self, _): return "UTC"
-    def utcoffset(self, _): return _NO_TIME_DELTA
-    def dst(self, _): return _NO_TIME_DELTA
 
-UTC = _UtcTimeZone()
+_NO_TIME_DELTA = timedelta(0)
 
+class _TimeZone(tzinfo):
+    registered = {}
+    def __init__(self, name, utcoffset, dst=None):
+        self.name = name
+        self._utcoffset = utcoffset
+        self._dst = dst or _NO_TIME_DELTA
+        _TimeZone.registered[name] = self
+    def tzname(self, _):
+        return self.name
+    def utcoffset(self, t):
+        return self._utcoffset + self.dst(t)
+    def dst(self, _):
+        return self._dst
+
+UTC = _TimeZone("UTC", _NO_TIME_DELTA)
+_CET = _TimeZone("CET", timedelta(hours=1))
+_CEST = _TimeZone("CEST", timedelta(hours=1), dst=timedelta(hours=1))
+
+
+class _OffsetOnlyTimeZone(tzinfo):
+    def __init__(self, utcoffset_inseconds):
+        self._utcoffset_inseconds = utcoffset_inseconds
+    def utcoffset(self, _):
+        return timedelta(seconds=self._utcoffset_inseconds)
+    def dst(self, _):
+        return _NO_TIME_DELTA
+
+
+_LOCAL_DELTA = timedelta(seconds=-timezone)
+_LOCAL_DST_DELTA = timedelta(seconds=-altzone) if daylight else _LOCAL_DELTA
 
 class _LocalTimezone(tzinfo):
     def utcoffset(self, t):
-        return _DST_DELTA if self._isdst(t) else _LOCAL_DELTA
+        return _LOCAL_DST_DELTA if self._isdst(t) else _LOCAL_DELTA
     def dst(self, t):
-        return _DST_DELTA - _LOCAL_DELTA if self._isdst(t) else _NO_TIME_DELTA
+        return _LOCAL_DST_DELTA - _LOCAL_DELTA if self._isdst(t) else _NO_TIME_DELTA
     def tzname(self, t):
         return tzname[self._isdst(t)]
     def _isdst(self, t):
@@ -207,40 +275,31 @@ class _LocalTimezone(tzinfo):
 Local = _LocalTimezone()
 
 
-class _TzHelper(tzinfo):
-    def __init__(self, utcoffset_inseconds):
-        self._utcoffset_inseconds = utcoffset_inseconds
-    def utcoffset(self, dt):
-        return timedelta(seconds=self._utcoffset_inseconds)
-
-
-_RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
-_RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
 _ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
-_ISO8601_BASIC_LOCAL = [('%Y', 4), ('%m', 2), ('%d', 2), ('%H', 2), ('%M', 2), ('%S', 2)]
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 _LOCAL =  "%Y-%m-%d %H:%M:%S"
+_RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
+_RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
+_ISO8601_BASIC_LOCAL = [('%Y', 4), ('%m', 2), ('%d', 2), ('%H', 2), ('%M', 2), ('%S', 2)]
+_JAVA_DEFAULT_DATE_FORMAT = "%a %b %d %H:%M:%S %Z %Y"
 
-_NO_TIME_DELTA = timedelta(0)
-_LOCAL_DELTA = timedelta(seconds=-timezone)
-_DST_DELTA = timedelta(seconds=-altzone) if daylight else _LOCAL_DELTA
 
 _MONTHS = {
     'nl': [
-            None,
-            'januari',
-            'februari',
-            'maart',
-            'april',
-            'mei',
-            'juni',
-            'juli',
-            'augustus',
-            'september',
-            'oktober',
-            'november',
-            'december'
-        ]
+        None,
+        'januari',
+        'februari',
+        'maart',
+        'april',
+        'mei',
+        'juni',
+        'juli',
+        'augustus',
+        'september',
+        'oktober',
+        'november',
+        'december'
+    ]
 }
 
 _ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>Z)$')

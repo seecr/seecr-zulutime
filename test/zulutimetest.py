@@ -26,8 +26,7 @@ from unittest import TestCase
 from os import popen
 
 from seecr.zulutime import ZuluTime, TimeError, UTC, Local
-from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE
-from datetime import datetime
+from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE, _CEST
 
 
 # TODO:
@@ -155,6 +154,25 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(    0, t.timezone.utcoffset(t).days)
         self.assertEquals(    0, t.timezone.dst(t).seconds)
 
+    def testParseIso8601CET(self):
+        zt = ZuluTime("2011-01-13T16:59:59 CET")
+        self.assertEquals('2011-01-13T16:59:59 CET', str(zt))
+        self.assertEquals('2011-01-13T15:59:59 UTC', zt.iso8601())
+        self.assertEqualsPointInTime(ZuluTime("2011-01-13T15:59:59Z"), zt)
+        self.assertEqualsPointInTime(ZuluTime("2011-01-12T23:59:59Z"), ZuluTime("2011-01-13T00:59:59 CET"))
+
+    def testParseIso8601CEST(self):
+        zt = ZuluTime("2011-08-13T16:59:59 CEST")
+        self.assertEquals('2011-08-13T16:59:59 CEST', str(zt))
+        self.assertEquals('2011-08-13T14:59:59 UTC', zt.iso8601())
+        self.assertEqualsPointInTime(ZuluTime("2011-08-13T14:59:59Z"), zt)
+        self.assertEqualsPointInTime(ZuluTime("2011-08-12T22:59:59Z"), ZuluTime("2011-08-13T00:59:59 CEST"))
+
+    def testParseJavaDefaultDateFormat(self):
+        zt = ZuluTime('Thu Jan 13 00:59:59 CET 2011')
+        self.assertEquals('2011-01-12T23:59:59 UTC', zt.iso8601())
+        self.assertEquals("2011-01-13T00:59:59 CET", zt.iso8601(zt.timezone))
+
     def testRaiseExceptionOnUnknownFormat(self):
         try:
             ZuluTime("this is no valid time")
@@ -186,6 +204,11 @@ class ZuluTimeTest(TestCase):
     def testDiplayString(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
         self.assertEquals("19:12:08", t.display("%H:%M:%S"))
+
+    def testFormatJavaDefaultDateFormat(self):
+        t = ZuluTime("2007-06-11T15:30:00Z")
+        self.assertEquals('Mon Jun 11 15:30:00 UTC 2007', t.javaDefaultFormat())
+        self.assertEquals('Mon Jun 11 17:30:00 CEST 2007', t.javaDefaultFormat(_CEST))
 
     def testSubtractSeconds(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
@@ -235,3 +258,6 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('1970-01-01T00:00:01Z', fromSeconds(1))
         self.assertEquals('1969-01-01T00:00:01Z', fromSeconds(-31535999))
         self.assertEquals('2015-03-17T12:53:01Z', fromSeconds(1426596781))
+
+    def assertEqualsPointInTime(self, a, b):
+        self.assertTrue(a.equalsPointInTime(b), "%s !equalsPointInTime %s" % (a, b))
