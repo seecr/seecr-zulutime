@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -174,9 +174,11 @@ class ZuluTime(object):
             if tzName in input:
                 if timezone is None:
                     timezone = tz
+                    input = input.replace(' '+tzName, '')
+
         if timezone is None:
-            timezone = UTC
-        return datetime.strptime(input, _ISO8601).replace(tzinfo=timezone)
+            input, timezone = _parseTimezone(input)
+        return datetime.strptime(input, _ISO8601_NO_TZ).replace(tzinfo=timezone)
 
     @staticmethod
     def _parseZulutimeFormat(input, timezone):
@@ -227,6 +229,7 @@ class ZuluTime(object):
         return datetime.strptime(input, _JAVA_DEFAULT_DATE_FORMAT).replace(tzinfo=timezone)
 
 
+
 _NO_TIME_DELTA = timedelta(0)
 
 class _TimeZone(tzinfo):
@@ -274,8 +277,24 @@ class _LocalTimezone(tzinfo):
 
 Local = _LocalTimezone()
 
+def _parseTimezone(dateString):
+    result = _TIMEDELTA_RE.search(dateString)
+    if result is None:
+        return dateString, UTC
+    hours = int(result.groupdict()['timedelta_hours'])
+    minutes = int(result.groupdict()['timedelta_minutes'] or '0')
+    sign = -1 if result.groupdict()['timedelta_sign'] == '-' else 1
+    delta = timedelta(hours=sign*hours, minutes=sign*minutes)
+    return dateString.replace(result.group(), '').strip(), \
+        _TimeZone(name="{sign}{hours:02d}:{minutes:02d}".format(
+                sign='+' if sign > 0 else '-',
+                hours=hours,
+                minutes=minutes),
+            utcoffset=delta)
 
-_ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
+
+_ISO8601_NO_TZ = "%Y-%m-%dT%H:%M:%S"
+_ISO8601 = _ISO8601_NO_TZ + " %Z"
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 _LOCAL =  "%Y-%m-%d %H:%M:%S"
 _RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
@@ -303,3 +322,4 @@ _MONTHS = {
 }
 
 _ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>Z)$')
+_TIMEDELTA_RE = re.compile(r'(?P<timedelta_sign>\+|\-)(?P<timedelta_hours>[0-9]{2})\:?(?P<timedelta_minutes>[0-9]{2})?$')

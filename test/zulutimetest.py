@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2015 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2016 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -26,7 +26,7 @@ from unittest import TestCase
 from os import popen
 
 from seecr.zulutime import ZuluTime, TimeError, UTC, Local
-from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE, _CEST
+from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE, _CEST, _TIMEDELTA_RE
 
 
 # TODO:
@@ -183,6 +183,19 @@ class ZuluTimeTest(TestCase):
     def testFormatIso8601(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
         self.assertEquals("1995-11-20T19:12:08 UTC", t.iso8601())
+        self.assertEquals("1995-11-20T19:12:08 UTC", ZuluTime("1995-11-20T19:12:08 UTC").iso8601())
+
+    def testFormatIso8601WithTimezoneInHours(self):
+        self.assertEquals({'timedelta_hours': '02', 'timedelta_minutes': '01', 'timedelta_sign': '+'}, _TIMEDELTA_RE.search("1995-11-20T19:12:08 +02:01").groupdict())
+        self.assertEquals({'timedelta_hours': '03', 'timedelta_minutes': '05', 'timedelta_sign': '+'}, _TIMEDELTA_RE.search("1995-11-20T19:12:08 +0305").groupdict())
+        self.assertEquals({'timedelta_hours': '03', 'timedelta_minutes': None, 'timedelta_sign': '+'}, _TIMEDELTA_RE.search("1995-11-20T19:12:08 +03").groupdict())
+        self.assertEquals(None, _TIMEDELTA_RE.search("1995-11-20T19:12:08Z"))
+        self.assertEquals({'timedelta_hours': '01', 'timedelta_minutes': '30', 'timedelta_sign': '-'}, _TIMEDELTA_RE.search("1995-11-20T19:12:08-01:30").groupdict())
+        self.assertEquals("1995-11-20T19:12:08 UTC", ZuluTime("1995-11-20T19:12:08 +00:00").iso8601())
+        self.assertEquals('2012-09-06T21:27:11Z', ZuluTime("2012-09-06T23:27:11+02:00").zulu())
+        self.assertEquals('2012-09-06T21:27:11Z', ZuluTime("2012-09-06T23:27:11 +02").zulu())
+        self.assertEquals('2012-09-07T01:27:11Z', ZuluTime("2012-09-06T23:27:11 -02").zulu())
+        self.assertEquals('2012-09-07T01:00:11Z', ZuluTime("2012-09-06T23:27:11-0133").zulu())
 
     def testFormatZulu(self):
         t = ZuluTime("Mon, 20 Nov 1995 21:12:08 +0200")
