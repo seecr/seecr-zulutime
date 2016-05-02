@@ -174,8 +174,7 @@ class ZuluTime(object):
             if tzName in input:
                 if timezone is None:
                     timezone = tz
-                    input = input.replace(' '+tzName, '')
-
+                    input = input.replace(tzName, '').strip()
         if timezone is None:
             input, timezone = _parseTimezone(input)
         return datetime.strptime(input, _ISO8601_NO_TZ).replace(tzinfo=timezone)
