@@ -111,7 +111,7 @@ class ZuluTime(object):
 
     def iso8601basic(self, timezone=None):
         timezone = timezone or UTC
-        return self._format(''.join(element for (element, l) in _ISO8601_BASIC_LOCAL), timezone=timezone)
+        return self._format(''.join(element for (sep, element, l) in _ISO8601_NO_TZ), timezone=timezone)
 
     def javaDefaultFormat(self, timezone=None):
         timezone = timezone or UTC
@@ -169,15 +169,32 @@ class ZuluTime(object):
 
     @staticmethod
     def _parseIso8601(input, timezone=None):
-        input = input.strip()
+        remainder = input.strip()
+        inputParts = []
+        pattern = []
+        for (sep, element, l) in _ISO8601_NO_TZ:
+            if sep and not remainder.startswith(sep):
+                if sep == 'T' and remainder.startswith(' '):
+                    pass
+                else:
+                    break
+            fragmentSize = len(sep) + l
+            inputParts.append(remainder[:fragmentSize])
+            remainder = remainder[fragmentSize:]
+            pattern.append(sep)
+            pattern.append(element)
+            if len(''.join(pattern)) >= len(''.join(inputParts)):
+                break
         for tzName, tz in _TimeZone.registered.iteritems():
-            if tzName in input:
+            if tzName in remainder:
                 if timezone is None:
                     timezone = tz
-                    input = input.replace(tzName, '').strip()
+                    remainder = remainder.replace(tzName, '').strip()
         if timezone is None:
-            input, timezone = _parseTimezone(input)
-        return datetime.strptime(input, _ISO8601_NO_TZ).replace(tzinfo=timezone)
+            remainder, timezone = _parseTimezone(remainder)
+        if remainder:
+            raise ValueError("'%s' does not match" % (input + remainder))
+        return datetime.strptime(''.join(inputParts), ''.join(pattern)).replace(tzinfo=timezone)
 
     @staticmethod
     def _parseZulutimeFormat(input, timezone):
@@ -208,7 +225,7 @@ class ZuluTime(object):
         timezone = UTC if timezone is None else timezone
         pattern = []
         cumulative = 0
-        for (element, l) in _ISO8601_BASIC_LOCAL:
+        for (sep, element, l) in _ISO8601_NO_TZ:
             cumulative += l
             pattern.append(element)
             if cumulative >= len(input):
@@ -292,13 +309,12 @@ def _parseTimezone(dateString):
             utcoffset=delta)
 
 
-_ISO8601_NO_TZ = "%Y-%m-%dT%H:%M:%S"
-_ISO8601 = _ISO8601_NO_TZ + " %Z"
+_ISO8601_NO_TZ = [('', '%Y', 4), ('-', '%m', 2,), ('-', '%d', 2), ('T', '%H', 2), (':', '%M', 2), (':', '%S', 2)]  # "%Y-%m-%dT%H:%M:%S"
+_ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 _LOCAL =  "%Y-%m-%d %H:%M:%S"
 _RFC2822 = "%a, %d %b %Y %H:%M:%S %z"
 _RFC1123 = "%a, %d %b %Y %H:%M:%S GMT"
-_ISO8601_BASIC_LOCAL = [('%Y', 4), ('%m', 2), ('%d', 2), ('%H', 2), ('%M', 2), ('%S', 2)]
 _JAVA_DEFAULT_DATE_FORMAT = "%a %b %d %H:%M:%S %Z %Y"
 
 
@@ -322,3 +338,6 @@ _MONTHS = {
 
 _ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>Z)$')
 _TIMEDELTA_RE = re.compile(r'(?P<timedelta_sign>\+|\-)(?P<timedelta_hours>[0-9]{2})\:?(?P<timedelta_minutes>[0-9]{2})?$')
+
+lookbehind = '(?<![0-9]{4}\-[0-9]{2})(?<![0-9]{4})'  # TODO: get rid of...
+

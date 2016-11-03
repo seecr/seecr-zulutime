@@ -118,6 +118,13 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(    0, t.timezone.utcoffset(t).days)
         self.assertEquals(    0, t.timezone.dst(t).seconds)
 
+    def testParseIso8601WithoutTimeOrDay(self):
+        a = ZuluTime("2012-09-06T23:27:11")
+        self.assertEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("2012-09-06T23:27:11"))
+        self.assertEquals(ZuluTime("2012-09-06T00:00:00Z"), ZuluTime("2012-09-06"))
+        self.assertEquals(ZuluTime("2012-09-01T00:00:00Z"), ZuluTime("2012-09"))
+        self.assertEquals(ZuluTime("2012-01-01T00:00:00Z"), ZuluTime("2012"))
+
     def testParseIso8601Basic(self):
         self.assertEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("20120906232711"))
         self.assertEquals(ZuluTime("2012-09-06T23:27:11Z"), ZuluTime("20120906232711000"))
