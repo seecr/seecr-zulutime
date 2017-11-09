@@ -94,6 +94,24 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(     0, t.timezone.utcoffset(t).seconds)
         self.assertEquals(     0, t.timezone.dst(t).seconds)
 
+    def testConversionFromSecondsSinceEpoch(self):
+        epoch = 1510240477.14 # seconds since epoch (1970, such as in Python time module)
+        try:
+            t = ZuluTime(epoch)
+            self.fail()
+        except TimeError, e:
+            self.assertEquals("Time zone unknown, use timezone=", str(e))
+        t = ZuluTime(epoch, timezone=UTC)
+        self.assertEquals(2017, t.year)
+        self.assertEquals(  11, t.month)
+        self.assertEquals(   9, t.day)
+        self.assertEquals(  15, t.hour)
+        self.assertEquals(  14, t.minute)
+        self.assertEquals(  37, t.second)
+        self.assertEquals("UTC", t.timezone.tzname(None))
+        self.assertEquals(    0, t.timezone.utcoffset(t).days)
+        
+
     def testGetCurrentTime(self):
         os_date = popen('date --rfc-2822').readline()
         t_ref = ZuluTime(os_date)

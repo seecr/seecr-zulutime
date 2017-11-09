@@ -48,7 +48,8 @@ class ZuluTime(object):
                     self._parseLocalFormat,
                     self._parseRfc2822,
                     self._parseIso8601BasicLocal,
-                    self._parseJavaDefaultDateFormat
+                    self._parseJavaDefaultDateFormat,
+                    self._parseEpoch,
                 ]:
                 try:
                     self._ = m(input, timezone=timezone)
@@ -69,7 +70,7 @@ class ZuluTime(object):
 
     @classmethod
     def parseEpoch(cls, seconds):
-        return cls(_=datetime.utcfromtimestamp(seconds).replace(tzinfo=UTC))
+        return cls(seconds, UTC)
 
     def __eq__(self, other):
         return self.__class__ is other.__class__ and self._ == other._ and self.timezone == other.timezone
@@ -206,6 +207,14 @@ class ZuluTime(object):
     def _parseLocalFormat(input, timezone):
         timezone = UTC if timezone is None else timezone
         return datetime.strptime(input, _LOCAL).replace(tzinfo=timezone)
+
+    @staticmethod
+    def _parseEpoch(seconds, timezone):
+        if not float(seconds):
+            raise TimeError("Format unknown")
+        if timezone is None:
+            raise TimeError("Time zone unknown, use timezone=")
+        return datetime.fromtimestamp(seconds, timezone)
 
     @staticmethod
     def _parseRfc2822(input, timezone):
