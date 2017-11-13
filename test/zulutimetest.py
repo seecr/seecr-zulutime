@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
