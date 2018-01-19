@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2018 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -96,12 +96,9 @@ class ZuluTimeTest(TestCase):
 
     def testConversionFromSecondsSinceEpoch(self):
         epoch = 1510240477.14 # seconds since epoch (1970, such as in Python time module)
-        try:
-            t = ZuluTime(epoch)
-            self.fail()
-        except TimeError, e:
-            self.assertEquals("Time zone unknown, use timezone=", str(e))
+        t_no_timezone = ZuluTime(epoch)
         t = ZuluTime(epoch, timezone=UTC)
+        self.assertEquals(t_no_timezone, t)
         self.assertEquals(2017, t.year)
         self.assertEquals(  11, t.month)
         self.assertEquals(   9, t.day)
@@ -110,7 +107,6 @@ class ZuluTimeTest(TestCase):
         self.assertEquals(  37, t.second)
         self.assertEquals("UTC", t.timezone.tzname(None))
         self.assertEquals(    0, t.timezone.utcoffset(t).days)
-        
 
     def testGetCurrentTime(self):
         os_date = popen('date --rfc-2822').readline()
@@ -287,12 +283,15 @@ class ZuluTimeTest(TestCase):
 
     def testSecondsEpoch(self):
         inSeconds = lambda s: ZuluTime(s).epoch
-        self.assertEquals(1, inSeconds('1970-01-01T00:00:01Z'))
-        self.assertEquals(-31535999, inSeconds('1969-01-01T00:00:01Z'))
+        self.assertEquals(0,          inSeconds('1970-01-01T00:00:00Z'))
+        self.assertEquals(1,          inSeconds('1970-01-01T00:00:01Z'))
+        self.assertEquals(-31535999,  inSeconds('1969-01-01T00:00:01Z'))
         self.assertEquals(1426596781, inSeconds('2015-03-17T12:53:01Z'))
 
     def testFromSecondsEpoch(self):
         fromSeconds = lambda s: ZuluTime.parseEpoch(s).zulu()
+        self.assertEquals('1970-01-01T00:00:00Z', fromSeconds(0))
+        self.assertEquals('1970-01-01T00:00:00Z', fromSeconds(0.001))
         self.assertEquals('1970-01-01T00:00:01Z', fromSeconds(1))
         self.assertEquals('1969-01-01T00:00:01Z', fromSeconds(-31535999))
         self.assertEquals('2015-03-17T12:53:01Z', fromSeconds(1426596781))

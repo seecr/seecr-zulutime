@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2018 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -70,7 +70,7 @@ class ZuluTime(object):
 
     @classmethod
     def parseEpoch(cls, seconds):
-        return cls(seconds, UTC)
+        return cls(seconds)
 
     def __eq__(self, other):
         return self.__class__ is other.__class__ and self._ == other._ and self.timezone == other.timezone
@@ -210,10 +210,8 @@ class ZuluTime(object):
 
     @staticmethod
     def _parseEpoch(seconds, timezone):
-        if not float(seconds):
-            raise TimeError("Format unknown")
-        if timezone is None:
-            raise TimeError("Time zone unknown, use timezone=")
+        timezone = UTC if timezone is None else timezone
+        float(seconds)
         return datetime.fromtimestamp(seconds, timezone)
 
     @staticmethod
@@ -349,4 +347,3 @@ _ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>
 _TIMEDELTA_RE = re.compile(r'(?P<timedelta_sign>\+|\-)(?P<timedelta_hours>[0-9]{2})\:?(?P<timedelta_minutes>[0-9]{2})?$')
 
 lookbehind = '(?<![0-9]{4}\-[0-9]{2})(?<![0-9]{4})'  # TODO: get rid of...
-
