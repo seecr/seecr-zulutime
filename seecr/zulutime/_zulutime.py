@@ -72,6 +72,9 @@ class ZuluTime(object):
     def parseEpoch(cls, seconds):
         return cls(seconds)
 
+    def __lt__(self, other):
+        return self.__class__ is other.__class__ and self._ <  other._
+
     def __eq__(self, other):
         return self.__class__ is other.__class__ and self._ == other._ and self.timezone == other.timezone
 

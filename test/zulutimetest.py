@@ -24,6 +24,7 @@
 
 from unittest import TestCase
 from os import popen
+from random import shuffle
 
 from seecr.zulutime import ZuluTime, TimeError, UTC, Local
 from seecr.zulutime._zulutime import _ZULU_FRACTION_REMOVAL_RE, _CEST, _TIMEDELTA_RE
@@ -295,6 +296,20 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('1970-01-01T00:00:01Z', fromSeconds(1))
         self.assertEquals('1969-01-01T00:00:01Z', fromSeconds(-31535999))
         self.assertEquals('2015-03-17T12:53:01Z', fromSeconds(1426596781))
+
+    def testSorting(self):
+        t4 = ZuluTime('2013-11-22T15:00:00Z')
+        t2 = ZuluTime('2013-11-21T15:00:00Z')
+        t5 = ZuluTime('2013-11-29T15:00:00Z')
+        t1 = ZuluTime('2013-11-20T15:00:00Z')
+        t3 = ZuluTime('2013-11-22T10:00:00Z')
+        zuluTimes = [t1,t2,t3,t4,t5]
+        shuffle(zuluTimes)
+        self.assertNotEqual([t1,t2,t3,t4,t5], zuluTimes)
+        self.assertEqual([t1,t2,t3,t4,t5], sorted(zuluTimes))
+
+
+
 
     def assertEqualsPointInTime(self, a, b):
         self.assertTrue(a.equalsPointInTime(b), "%s !equalsPointInTime %s" % (a, b))
