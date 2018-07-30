@@ -31,6 +31,7 @@ from calendar import timegm
 
 class TimeError(Exception): pass
 
+
 class ZuluTime(object):
     """Converts timestamps making sure time zone information is properly dealt with."""
 
@@ -141,7 +142,21 @@ class ZuluTime(object):
         return self._.astimezone(timezone).strftime(f)
 
     def add(self, **kwargs):
-        return type(self)(_=self._ + timedelta(**kwargs))
+        months = kwargs.pop('months', None)
+        years = kwargs.pop('years', None)
+        newt = self._
+        if months:
+            divmonth = newt.month + months
+            divyear, newmonth = divmod(divmonth -1, 12)
+            newmonth += 1
+            try:
+                newt = newt.replace(year=newt.year + divyear, month=newmonth)
+            except ValueError:
+                newt = newt.replace(year=newt.year + divyear, month=newmonth+1, day=1)
+                newt -= timedelta(days=1)
+        if years:
+            newt = newt.replace(year=newt.year + years)
+        return type(self)(_=newt + timedelta(**kwargs))
 
     @property
     def year(self): return self._.year

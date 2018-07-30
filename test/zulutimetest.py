@@ -250,6 +250,16 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('2013-11-22T14:59:00Z', t.add(seconds=-60).zulu())
         self.assertEquals('2013-11-22T15:00:00Z', t.zulu())
 
+    def testAddSubractYearMonthEtc(self):
+        t = ZuluTime('2013-11-22T15:00:00Z')
+        self.assertEquals('2013-12-22T15:00:00Z', t.add(months=+1).zulu())
+        self.assertEquals('2014-01-22T15:00:00Z', t.add(months=+2).zulu())
+        self.assertEquals('2015-06-22T15:00:00Z', t.add(years=+2, months=-5).zulu())
+        self.assertEquals('2013-11-21T15:00:00Z', t.add(days=-1).zulu())
+        t = ZuluTime('2013-01-30T15:00:00Z')
+        self.assertEquals('2013-02-28T15:00:00Z', t.add(months=+1).zulu())
+        self.assertEquals('2013-03-30T15:00:00Z', t.add(months=+2).zulu())
+
     def testLocal(self):
         t = ZuluTime('2013-11-22T15:00:00Z')
         self.assertEquals('2013-11-22 16:00:00', t.local())
@@ -307,9 +317,6 @@ class ZuluTimeTest(TestCase):
         shuffle(zuluTimes)
         self.assertNotEqual([t1,t2,t3,t4,t5], zuluTimes)
         self.assertEqual([t1,t2,t3,t4,t5], sorted(zuluTimes))
-
-
-
 
     def assertEqualsPointInTime(self, a, b):
         self.assertTrue(a.equalsPointInTime(b), "%s !equalsPointInTime %s" % (a, b))
