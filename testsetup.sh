@@ -26,11 +26,11 @@
 set -e
 
 rm -rf tmp build
-pycmd=python2.6
+pycmd=python2.7
 
 $pycmd setup.py install --root tmp --install-scripts=usr/bin 
 
-export PYTHONPATH=`pwd`/tmp/usr/local/lib/python2.6/dist-packages
+export PYTHONPATH=`pwd`/tmp/usr/local/lib/python2.7/dist-packages
 
 cp -r test tmp/test
 cp seecr/__init__.py $PYTHONPATH/seecr/
