@@ -142,6 +142,10 @@ class ZuluTime(object):
         try:
             return self._.astimezone(timezone).strftime(f)
         except ValueError, e:
+            # datetime does not support strftime for dates with year < 1900
+            # This is a hack around this problem, will work for most formats
+            # excepts for when a weekday (%a) is involved. For a better solution
+            # see https://code.activestate.com/recipes/306860-proleptic-gregorian-dates-and-strftime-before-1900/
             if self._.year < 1900 and not '%a' in f:
                 t = self._.replace(year=1999).astimezone(timezone)
                 r = t.strftime(f)
