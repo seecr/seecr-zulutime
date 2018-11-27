@@ -318,5 +318,18 @@ class ZuluTimeTest(TestCase):
         self.assertNotEqual([t1,t2,t3,t4,t5], zuluTimes)
         self.assertEqual([t1,t2,t3,t4,t5], sorted(zuluTimes))
 
+    def testAncient(self):
+        x = ZuluTime('1658')
+        self.assertEqual('1658-01-01T00:00:00Z', x.zulu())
+        self.assertEqual('1658-01-01 01:00:00', x.local())
+        self.assertEqual('1658-01-01T00:00:00 UTC', x.iso8601())
+        self.assertEqual('16580101000000', x.iso8601basic())
+        self.assertEqual(-9845712000, x.epoch)
+
+        # Do not support dates before 1900 with days.
+        self.assertRaises(ValueError, x.rfc2822)
+        self.assertRaises(ValueError, x.rfc1123)
+        self.assertRaises(ValueError, x.javaDefaultFormat)
+
     def assertEqualsPointInTime(self, a, b):
         self.assertTrue(a.equalsPointInTime(b), "%s !equalsPointInTime %s" % (a, b))

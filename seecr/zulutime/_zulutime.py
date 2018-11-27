@@ -139,7 +139,15 @@ class ZuluTime(object):
 
     def _format(self, f, timezone=None):
         timezone = timezone or UTC
-        return self._.astimezone(timezone).strftime(f)
+        try:
+            return self._.astimezone(timezone).strftime(f)
+        except ValueError, e:
+            if self._.year < 1900 and not '%a' in f:
+                t = self._.replace(year=1999).astimezone(timezone)
+                r = t.strftime(f)
+                return r.replace('1999', '%04d' % self._.year)
+            raise e
+
 
     def add(self, **kwargs):
         months = kwargs.pop('months', None)
