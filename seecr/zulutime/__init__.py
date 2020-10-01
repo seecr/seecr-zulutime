@@ -22,4 +22,4 @@
 #
 ## end license ##
 
-from _zulutime import ZuluTime, TimeError, UTC, Local
+from ._zulutime import ZuluTime, TimeError, UTC, Local

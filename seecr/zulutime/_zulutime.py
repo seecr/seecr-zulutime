@@ -47,16 +47,16 @@ class ZuluTime(object):
                     self._parseIso8601,
                     self._parseZulutimeFormat,
                     self._parseLocalFormat,
+                    self._parseJavaDefaultDateFormat,
                     self._parseRfc2822,
                     self._parseIso8601BasicLocal,
-                    self._parseJavaDefaultDateFormat,
                     self._parseEpoch,
                 ]:
                 try:
                     self._ = m(input, timezone=timezone)
                     lastTimeError = None
                     break
-                except TimeError, e:
+                except TimeError as e:
                     lastTimeError = e
                 except Exception:
                     pass
@@ -141,7 +141,7 @@ class ZuluTime(object):
         timezone = timezone or UTC
         try:
             return self._.astimezone(timezone).strftime(f)
-        except ValueError, e:
+        except ValueError as e:
             # datetime does not support strftime for dates with year < 1900
             # This is a hack around this problem, will work for most formats
             # excepts for when a weekday (%a) is involved. For a better solution
@@ -216,7 +216,7 @@ class ZuluTime(object):
             pattern.append(element)
             if len(''.join(pattern)) >= len(''.join(inputParts)):
                 break
-        for tzName, tz in _TimeZone.registered.iteritems():
+        for tzName, tz in _TimeZone.registered.items():
             if tzName in remainder:
                 if timezone is None:
                     timezone = tz
@@ -250,9 +250,11 @@ class ZuluTime(object):
         if result is None:
             raise TimeError("Format unknown")
         year, month, day, hour, minutes, seconds, _, _, _, utcoffset = result
-        if utcoffset is None:
+        if utcoffset == 0:
             if timezone is None:
-                raise TimeError("Time zone unknown, use timezone=")
+                timezone = UTC
+            #if timezone is None:
+            #    raise TimeError("Time zone unknown, use timezone=")
         else:
             timezone = _OffsetOnlyTimeZone(utcoffset)
         return datetime(year, month, day, hour, minutes, seconds, 0, timezone).astimezone(UTC)
@@ -273,7 +275,7 @@ class ZuluTime(object):
     @staticmethod
     def _parseJavaDefaultDateFormat(input, timezone=None):
         input = input.strip()
-        for tzName, tz in _TimeZone.registered.iteritems():
+        for tzName, tz in _TimeZone.registered.items():
             if tzName in input:
                 if timezone is None:
                     timezone = tz
