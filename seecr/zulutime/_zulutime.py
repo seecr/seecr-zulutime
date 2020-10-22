@@ -378,4 +378,3 @@ _MONTHS = {
 _ZULU_FRACTION_REMOVAL_RE = re.compile(r'(?P<delimSeconds>:[0-9]+)\.[0-9]+(?P<Z>Z)$')
 _TIMEDELTA_RE = re.compile(r'(?P<timedelta_sign>\+|\-)(?P<timedelta_hours>[0-9]{2})\:?(?P<timedelta_minutes>[0-9]{2})?$')
 
-lookbehind = '(?<![0-9]{4}\-[0-9]{2})(?<![0-9]{4})'  # TODO: get rid of...
