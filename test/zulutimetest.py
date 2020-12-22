@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2018 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2018, 2020 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -189,6 +189,10 @@ class ZuluTimeTest(TestCase):
         self.assertEquals('2011-08-13T14:59:59 UTC', zt.iso8601())
         self.assertEqualsPointInTime(ZuluTime("2011-08-13T14:59:59Z"), zt)
         self.assertEqualsPointInTime(ZuluTime("2011-08-12T22:59:59Z"), ZuluTime("2011-08-13T00:59:59 CEST"))
+
+    def testParseIso8601WithSpecifiedTime(self):
+        self.assertEqual('2020-12-21T00:42:24Z', ZuluTime("2020-12-21T01:42:24+01:00").zulu())
+        self.assertEqual('2020-12-21T00:42:24Z', ZuluTime("2020-12-21T01:42:24.403578+01:00").zulu())
 
     def testParseJavaDefaultDateFormat(self):
         zt = ZuluTime('Thu Jan 13 00:59:59 CET 2011')

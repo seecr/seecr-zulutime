@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012-2018 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012-2018, 2020 Seecr (Seek You Too B.V.) http://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -116,7 +116,7 @@ class ZuluTime(object):
 
     def iso8601basic(self, timezone=None):
         timezone = timezone or UTC
-        return self._format(''.join(element for (sep, element, l) in _ISO8601_NO_TZ), timezone=timezone)
+        return self._format(''.join(element for (sep, element, l) in _ISO8601_NO_TZ if element != '%f'), timezone=timezone)
 
     def javaDefaultFormat(self, timezone=None):
         timezone = timezone or UTC
@@ -346,7 +346,7 @@ def _parseTimezone(dateString):
             utcoffset=delta)
 
 
-_ISO8601_NO_TZ = [('', '%Y', 4), ('-', '%m', 2,), ('-', '%d', 2), ('T', '%H', 2), (':', '%M', 2), (':', '%S', 2)]  # "%Y-%m-%dT%H:%M:%S"
+_ISO8601_NO_TZ = [('', '%Y', 4), ('-', '%m', 2,), ('-', '%d', 2), ('T', '%H', 2), (':', '%M', 2), (':', '%S', 2), ('.', '%f', 6)]  # "%Y-%m-%dT%H:%M:%S.%f"
 _ISO8601 = "%Y-%m-%dT%H:%M:%S %Z"
 _ZULU =  "%Y-%m-%dT%H:%M:%SZ"
 _LOCAL =  "%Y-%m-%d %H:%M:%S"
