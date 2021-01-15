@@ -3,7 +3,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012, 2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2014, 2020-2021 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -23,21 +23,23 @@
 #
 ## end license ##
 
-set -e
-
+set -o errexit
 rm -rf tmp build
-pycmd=python2.7
+mydir=$(cd $(dirname $0); pwd)
+source /usr/share/seecr-tools/functions.d/test
 
-$pycmd setup.py install --root tmp --install-scripts=usr/bin 
+VERSION="x.y.z"
 
-export PYTHONPATH=`pwd`/tmp/usr/local/lib/python2.7/dist-packages
+definePythonVars
+echo "Het PythonPath is ${PYTHONPATH}"
+${PYTHON} setup.py install --root tmp
 
 cp -r test tmp/test
-cp seecr/__init__.py $PYTHONPATH/seecr/
+removeDoNotDistribute tmp
+find tmp -name '*.py' -exec sed -r -e "
+    s/\\\$Version:[^\\\$]*\\\$/\\\$Version: ${VERSION}\\\$/;
+    " -i '{}' \;
 
-(
-cd tmp/test
-./alltests.sh
-)
-
+cp -r test tmp/test
+runtests "$@"
 rm -rf tmp build

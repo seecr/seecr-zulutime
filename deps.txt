@@ -1,1 +1,1 @@
-seecr-core
+python3-seecr-core

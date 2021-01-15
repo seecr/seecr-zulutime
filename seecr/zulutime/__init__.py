@@ -2,7 +2,7 @@
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012, 2014, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
+# Copyright (C) 2012, 2014, 2020-2021 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -23,3 +23,4 @@
 ## end license ##
 
 from ._zulutime import ZuluTime, TimeError, UTC, Local
+

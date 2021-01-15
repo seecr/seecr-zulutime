@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ## begin license ##
 #
 # Zulutime helps formatting and parsing timestamps.
 #
-# Copyright (C) 2012, 2014 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2014, 2020-2021 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Zulutime"
 #
@@ -29,7 +29,7 @@ setup(
     name='seecr-zulutime',
     version='%VERSION%',
     packages=[
-        'seecr.zulutime', 
+        'seecr.zulutime',
     ],
     url='http://seecr.nl',
     author='Seecr',
