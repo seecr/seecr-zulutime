@@ -301,6 +301,9 @@ class _TimeZone(tzinfo):
     def dst(self, _):
         return self._dst
 
+    def __reduce__(self):
+        return (_TimeZone, (self.name, self._utcoffset))
+
 UTC = _TimeZone("UTC", _NO_TIME_DELTA)
 _CET = _TimeZone("CET", timedelta(hours=1))
 _CEST = _TimeZone("CEST", timedelta(hours=1), dst=timedelta(hours=1))
